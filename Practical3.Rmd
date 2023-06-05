@@ -60,7 +60,7 @@ sort(sample(files, 20))
 # These file names tell us that pneumonia can be caused by bacteria or virus.
 # This might make predicting pneumonia more difficult because X-rays do not detect microorganisms such as bacteria or viruses. Predicting may not be accurate to produce a result that lets us know the cause of pneumonia.
 
-```{r}
+```{r exploring data}
 base_dir <- "Data/lab3_chest_xray"
 
 train_pneumonia_dir <- file.path(base_dir, "train", "PNEUMONIA")
@@ -94,7 +94,7 @@ cat("Total Normal images:", length(c(train_normal, test_normal, val_normal)), "\
 
 ###Creating training datasets
 
-```{r trainin datasets}
+```{r training datasets}
 train_dataset <- c(train_pn, train_normal)
 train_labels <- c(rep("pneumonia", length(train_pn)), rep("normal", length(train_normal)))
 
@@ -130,3 +130,123 @@ cat("file name: ", shuffled_train_dataset[5], "\nlabel: ", shuffled_train_labels
 ```
 
 ###Data visualization
+
+```{r data visualization}
+
+#  List to store the ggplot objects
+plots <- list()
+
+# Iterating through the images and labels
+for (i in 1:4) {
+  
+image <- readImage(shuffled_train_dataset[i])
+  
+# Creating a ggplot object for the image with the corresponding label
+  plot <- ggplot() +
+    theme_void() +
+    annotation_custom(
+      rasterGrob(image, interpolate = TRUE),
+      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+    )
+  
+# Adding ggplot object to the list
+  plots[[i]] <- plot
+}
+
+# Arranging plots in a 2x2 grid
+grid.arrange(grobs = plots, nrow = 2, ncol = 2)
+
+```
+**2**
+# From looking at these images, we need to normalize the image size (i.e. dimensions) before training a model. We may also need to normalize the alignment of images.
+
+###Data pre-processing
+
+```{r}
+process_images <- function(shuffled_dataset) {
+  
+img_size <- 224  # Desired image size
+  
+# Initializing an empty list to store processed images
+X <- list()
+  
+# Looping through each image path in shuffled_train_dataset
+for (image_path in shuffled_dataset) {
+
+# Reading the image
+img <- imager::load.image(image_path)
+    
+# Normalizing the image
+img_normalized <- img/255
+    
+# Resizing the image
+img_resized <- resize(img_normalized, img_size, img_size)
+    
+# Appending the processed image to the list
+    X <- c(X, list(img_resized))
+  }
+  
+  return(X)
+}
+```
+
+```{r training, testing, validating}
+train_X <- process_images(shuffled_train_dataset)
+test_X <- process_images(shuffled_test_dataset)
+val_X <- process_images(shuffled_val_dataset)
+
+train_y <- ifelse(shuffled_train_labels == "normal", 1, 2)
+test_y <- ifelse(shuffled_test_labels == "normal", 1, 2)
+val_y <- ifelse(shuffled_val_labels == "normal", 1, 2)
+
+train_y <- as.integer(train_y)
+test_y <- as.integer(test_y)
+val_y <- as.integer(val_y)
+```
+
+```{r}
+# Creating list to store the ggplot objects
+plots <- list()
+
+# Iterating through the images and labels
+for (i in 1:4) {
+  if (train_y[i] == 0) {
+    label <- "Normal"
+  } else {
+    label <- "Pneumonia"
+  }
+  
+# Creating a ggplot object for the image with the corresponding label
+  plot <- ggplot() +
+    theme_void() +
+    ggtitle(label) +
+    annotation_custom(
+      rasterGrob(train_X[[i]], interpolate = TRUE),
+      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+    )
+  
+# Adding the ggplot object to the list
+  plots[[i]] <- plot
+}
+
+# Arranging the plots in a 2x2 grid
+grid.arrange(grobs = plots, nrow = 2, ncol = 2)
+```
+
+```{r}
+# Combining train, test, and val vectors into a single data frame
+df <- data.frame(
+  Data = rep(c("Train", "Test", "Val"), times = c(length(train_y), length(test_y), length(val_y))),
+  Value = c(train_y, test_y, val_y)
+)
+
+# Creating a single bar plot with facets
+fig <- ggplot(df, aes(x = Value)) +
+  geom_bar() +
+  ylim(0, 510) +
+  facet_wrap(~Data, ncol = 3)
+
+# Arranging the plot
+grid.arrange(fig, nrow = 1)
+```
+
