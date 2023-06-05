@@ -48,7 +48,8 @@ library(abind)
 ###Exploring the dataset
 
 **0**
-#Pneumonia is
+# Pneumonia is an infection causing inflammation of the alveoli.
+# The benefit of being able to identify it from X-rays is that it provides quick diagnosis, in a safe and non-invasive manner.
 
 ```{r}
 data_folder = "Data/lab3_chest_xray"
