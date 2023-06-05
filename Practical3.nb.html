@@ -1814,9 +1814,42 @@ library(magick)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>###Exploring the dataset</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0YV9mb2xkZXIgPSBcIkRhdGEvbGFiM19jaGVzdF94cmF5XCJcbmZpbGVzIDwtbGlzdC5maWxlcyhkYXRhX2ZvbGRlciwgZnVsbC5uYW1lcyA9IFRSVUUsIHJlY3Vyc2l2ZSA9IFRSVUUgKVxuc29ydChzYW1wbGUoZmlsZXMsIDIwKSlcbmBgYCJ9 -->
+<pre class="r"><code>data_folder = &quot;Data/lab3_chest_xray&quot;
+files &lt;-list.files(data_folder, full.names = TRUE, recursive = TRUE )
+sort(sample(files, 20))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3Rlc3QvTk9STUFML0lNLTAwMDEtMDAwMS5qcGVnXCIgICAgICAgICAgICAgICAgXG4gWzJdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdGVzdC9OT1JNQUwvSU0tMDA0My0wMDAxLmpwZWdcIiAgICAgICAgICAgICAgICBcbiBbM10gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90ZXN0L05PUk1BTC9OT1JNQUwyLUlNLTAwOTgtMDAwMS5qcGVnXCIgICAgICAgIFxuIFs0XSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3Rlc3QvUE5FVU1PTklBL3BlcnNvbjEyNF9iYWN0ZXJpYV81OTAuanBlZ1wiICAgXG4gWzVdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdGVzdC9QTkVVTU9OSUEvcGVyc29uMTM0X2JhY3RlcmlhXzY0My5qcGVnXCIgICBcbiBbNl0gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90ZXN0L1BORVVNT05JQS9wZXJzb24xNTVfYmFjdGVyaWFfNzMwLmpwZWdcIiAgIFxuIFs3XSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3RyYWluL05PUk1BTC9JTS0wMjI5LTAwMDEuanBlZ1wiICAgICAgICAgICAgICAgXG4gWzhdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdHJhaW4vTk9STUFML0lNLTAzMTQtMDAwMS5qcGVnXCIgICAgICAgICAgICAgICBcbiBbOV0gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90cmFpbi9OT1JNQUwvSU0tMDQwMS0wMDAxLmpwZWdcIiAgICAgICAgICAgICAgIFxuWzEwXSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3RyYWluL05PUk1BTC9JTS0wNTI1LTAwMDEtMDAwMS5qcGVnXCIgICAgICAgICAgXG5bMTFdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdHJhaW4vTk9STUFML0lNLTA1MjgtMDAwMS5qcGVnXCIgICAgICAgICAgICAgICBcblsxMl0gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90cmFpbi9OT1JNQUwvSU0tMDYxOC0wMDAxLmpwZWdcIiAgICAgICAgICAgICAgIFxuWzEzXSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3RyYWluL1BORVVNT05JQS9wZXJzb24xMDY2X2JhY3RlcmlhXzMwMDAuanBlZ1wiXG5bMTRdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdHJhaW4vUE5FVU1PTklBL3BlcnNvbjEwODFfYmFjdGVyaWFfMzAyMS5qcGVnXCJcblsxNV0gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90cmFpbi9QTkVVTU9OSUEvcGVyc29uMTA4Nl92aXJ1c18xNzk4LmpwZWdcIiAgIFxuWzE2XSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3RyYWluL1BORVVNT05JQS9wZXJzb24xMTBfdmlydXNfMjA1LmpwZWdcIiAgICAgXG5bMTddIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdHJhaW4vUE5FVU1PTklBL3BlcnNvbjExNjlfdmlydXNfMTk2OC5qcGVnXCIgICBcblsxOF0gXCJEYXRhL2xhYjNfY2hlc3RfeHJheS90cmFpbi9QTkVVTU9OSUEvcGVyc29uMTE3N192aXJ1c18yMDAwLmpwZWdcIiAgIFxuWzE5XSBcIkRhdGEvbGFiM19jaGVzdF94cmF5L3RyYWluL1BORVVNT05JQS9wZXJzb24xMTgwX3ZpcnVzXzIwMTAuanBlZ1wiICAgXG5bMjBdIFwiRGF0YS9sYWIzX2NoZXN0X3hyYXkvdHJhaW4vUE5FVU1PTklBL3BlcnNvbjEyNTFfYmFjdGVyaWFfMzIwOC5qcGVnXCJcbiJ9 -->
+<pre><code> [1] &quot;Data/lab3_chest_xray/test/NORMAL/IM-0001-0001.jpeg&quot;                
+ [2] &quot;Data/lab3_chest_xray/test/NORMAL/IM-0043-0001.jpeg&quot;                
+ [3] &quot;Data/lab3_chest_xray/test/NORMAL/NORMAL2-IM-0098-0001.jpeg&quot;        
+ [4] &quot;Data/lab3_chest_xray/test/PNEUMONIA/person124_bacteria_590.jpeg&quot;   
+ [5] &quot;Data/lab3_chest_xray/test/PNEUMONIA/person134_bacteria_643.jpeg&quot;   
+ [6] &quot;Data/lab3_chest_xray/test/PNEUMONIA/person155_bacteria_730.jpeg&quot;   
+ [7] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0229-0001.jpeg&quot;               
+ [8] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0314-0001.jpeg&quot;               
+ [9] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0401-0001.jpeg&quot;               
+[10] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0525-0001-0001.jpeg&quot;          
+[11] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0528-0001.jpeg&quot;               
+[12] &quot;Data/lab3_chest_xray/train/NORMAL/IM-0618-0001.jpeg&quot;               
+[13] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1066_bacteria_3000.jpeg&quot;
+[14] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1081_bacteria_3021.jpeg&quot;
+[15] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1086_virus_1798.jpeg&quot;   
+[16] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person110_virus_205.jpeg&quot;     
+[17] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1169_virus_1968.jpeg&quot;   
+[18] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1177_virus_2000.jpeg&quot;   
+[19] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1180_virus_2010.jpeg&quot;   
+[20] &quot;Data/lab3_chest_xray/train/PNEUMONIA/person1251_bacteria_3208.jpeg&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p><strong>0</strong></p>
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiS2FtaW5kYSAtIFByYWN0aWNhbCAzIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpgYGB7cn0KaW5zdGFsbC5wYWNrYWdlcygiZ3JpZEV4dHJhIikKaW5zdGFsbC5wYWNrYWdlcygianBlZyIpCmluc3RhbGwucGFja2FnZXMoImltYWdlciIpCmluc3RhbGwucGFja2FnZXMoIm1hZ2ljayIpCgpCaW9jTWFuYWdlcjo6aW5zdGFsbCgiRUJJbWFnZSIpCmluc3RhbGwucGFja2FnZXMoImFiaW5kIikKCmluc3RhbGwucGFja2FnZXMoInRvcmNoIikKaW5zdGFsbC5wYWNrYWdlcygidG9yY2h2aXNpb24iKQppbnN0YWxsLnBhY2thZ2VzKCJsdXoiKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGdncGxvdDIpCmxpYnJhcnkoZ3JpZEV4dHJhKQpsaWJyYXJ5KGltYWdlcikKYGBgCgpgYGB7cn0KbGlicmFyeShqcGVnKQpsaWJyYXJ5KG1hZ2ljaykKYGBgCgpgYGB7cn0KbGlicmFyeShFQkltYWdlKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGdyaWQpCmBgYAoKYGBge3J9CmxpYnJhcnkoZHBseXIpCmBgYAoKYGBge3J9CmxpYnJhcnkoYWJpbmQpCmBgYAoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiS2FtaW5kYSAtIFByYWN0aWNhbCAzIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpgYGB7cn0KaW5zdGFsbC5wYWNrYWdlcygiZ3JpZEV4dHJhIikKaW5zdGFsbC5wYWNrYWdlcygianBlZyIpCmluc3RhbGwucGFja2FnZXMoImltYWdlciIpCmluc3RhbGwucGFja2FnZXMoIm1hZ2ljayIpCgpCaW9jTWFuYWdlcjo6aW5zdGFsbCgiRUJJbWFnZSIpCmluc3RhbGwucGFja2FnZXMoImFiaW5kIikKCmluc3RhbGwucGFja2FnZXMoInRvcmNoIikKaW5zdGFsbC5wYWNrYWdlcygidG9yY2h2aXNpb24iKQppbnN0YWxsLnBhY2thZ2VzKCJsdXoiKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGdncGxvdDIpCmxpYnJhcnkoZ3JpZEV4dHJhKQpsaWJyYXJ5KGltYWdlcikKYGBgCgpgYGB7cn0KbGlicmFyeShqcGVnKQpsaWJyYXJ5KG1hZ2ljaykKYGBgCgpgYGB7cn0KbGlicmFyeShFQkltYWdlKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGdyaWQpCmBgYAoKYGBge3J9CmxpYnJhcnkoZHBseXIpCmBgYAoKYGBge3J9CmxpYnJhcnkoYWJpbmQpCmBgYAoKCiMjI0V4cGxvcmluZyB0aGUgZGF0YXNldAoKYGBge3J9CmRhdGFfZm9sZGVyID0gIkRhdGEvbGFiM19jaGVzdF94cmF5IgpmaWxlcyA8LWxpc3QuZmlsZXMoZGF0YV9mb2xkZXIsIGZ1bGwubmFtZXMgPSBUUlVFLCByZWN1cnNpdmUgPSBUUlVFICkKc29ydChzYW1wbGUoZmlsZXMsIDIwKSkKYGBgCioqMCoqCg==</div>
 
 
 

@@ -44,3 +44,12 @@ library(dplyr)
 library(abind)
 ```
 
+
+###Exploring the dataset
+
+```{r}
+data_folder = "Data/lab3_chest_xray"
+files <-list.files(data_folder, full.names = TRUE, recursive = TRUE )
+sort(sample(files, 20))
+```
+**0**
