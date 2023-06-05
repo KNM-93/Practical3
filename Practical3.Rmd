@@ -47,9 +47,84 @@ library(abind)
 
 ###Exploring the dataset
 
+**0**
+#Pneumonia is
+
 ```{r}
 data_folder = "Data/lab3_chest_xray"
 files <-list.files(data_folder, full.names = TRUE, recursive = TRUE )
 sort(sample(files, 20))
 ```
-**0**
+**1**
+#These file names tell us that pneumonia..
+
+```{r}
+base_dir <- "Data/lab3_chest_xray"
+
+train_pneumonia_dir <- file.path(base_dir, "train", "PNEUMONIA")
+train_normal_dir <- file.path(base_dir, "train", "NORMAL")
+
+test_pneumonia_dir <- file.path(base_dir, "test", "PNEUMONIA")
+test_normal_dir <- file.path(base_dir, "test", "NORMAL")
+
+val_normal_dir <- file.path(base_dir, "validate", "NORMAL")
+val_pneumonia_dir <- file.path(base_dir, "validate", "PNEUMONIA")
+
+train_pn <- list.files(train_pneumonia_dir, full.names = TRUE)
+train_normal <- list.files(train_normal_dir, full.names = TRUE)
+
+test_normal <- list.files(test_normal_dir, full.names = TRUE)
+test_pn <- list.files(test_pneumonia_dir, full.names = TRUE)
+
+val_pn <- list.files(val_pneumonia_dir, full.names = TRUE)
+val_normal <- list.files(val_normal_dir, full.names = TRUE)
+
+cat("Total images:", length(c(train_pn, train_normal, test_normal, test_pn, val_pn, val_normal)), "\n")
+```
+
+```{r}
+cat("Total pneumonia images:", length(c(train_pn, test_pn, val_pn)), "\n")
+```
+
+```{r}
+cat("Total Normal images:", length(c(train_normal, test_normal, val_normal)), "\n")
+```
+
+###Creating training datasets
+
+```{r trainin datasets}
+train_dataset <- c(train_pn, train_normal)
+train_labels <- c(rep("pneumonia", length(train_pn)), rep("normal", length(train_normal)))
+
+test_dataset <- c(test_pn, test_normal)
+test_labels <- c(rep("pneumonia", length(test_pn)), rep("normal", length(test_normal)))
+
+val_dataset <- c(val_pn, val_normal)
+val_labels <- c(rep("pneumonia", length(val_pn)), rep("normal", length(val_normal)))
+
+#Creating data frames
+train_data <- data.frame(dataset = train_dataset, label = train_labels)
+test_data <- data.frame(dataset = test_dataset, label = test_labels)
+val_data <- data.frame(dataset = val_dataset, label = val_labels)
+
+#Shuffling the data frame
+train_data <- train_data[sample(nrow(train_data)), ]
+test_data <- test_data[sample(nrow(test_data)), ]
+val_data <- val_data[sample(nrow(val_data)), ]
+
+#Extracting shuffled dataset and labels
+shuffled_train_dataset <- train_data$dataset
+shuffled_train_labels <- train_data$label
+
+shuffled_test_dataset <- test_data$dataset
+shuffled_test_labels <- test_data$label
+
+shuffled_val_dataset <- val_data$dataset
+shuffled_val_labels <- val_data$label
+```
+
+```{r}
+cat("file name: ", shuffled_train_dataset[5], "\nlabel: ", shuffled_train_labels[5])
+```
+
+###Data visualization
