@@ -57,7 +57,8 @@ files <-list.files(data_folder, full.names = TRUE, recursive = TRUE )
 sort(sample(files, 20))
 ```
 **1**
-#These file names tell us that pneumonia..
+# These file names tell us that pneumonia can be caused by bacteria or virus.
+# This might make predicting pneumonia more difficult because X-rays do not detect microorganisms such as bacteria or viruses. Predicting may not be accurate to produce a result that lets us know the cause of pneumonia.
 
 ```{r}
 base_dir <- "Data/lab3_chest_xray"
