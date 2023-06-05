@@ -3,4 +3,44 @@ title: "Kaminda - Practical 3"
 output: html_notebook
 ---
 
+```{r}
+install.packages("gridExtra")
+install.packages("jpeg")
+install.packages("imager")
+install.packages("magick")
+
+BiocManager::install("EBImage")
+install.packages("abind")
+
+install.packages("torch")
+install.packages("torchvision")
+install.packages("luz")
+```
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(imager)
+```
+
+```{r}
+library(jpeg)
+library(magick)
+```
+
+```{r}
+library(EBImage)
+```
+
+```{r}
+library(grid)
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+library(abind)
+```
 
