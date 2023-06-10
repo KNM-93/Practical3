@@ -454,11 +454,21 @@ print(acc_plot)
 
 **4**
 
-#Based on the training and test accuracy
+# Based on the training and test accuracy, this model is not accurately classifying X-rays into pneumonia vs. normal. This could be for a number of reasons:
+
+# a) There may not be sufficient training data for the model to accurately distinguish between normal and pneumonia.
+# b) This model may not be complex enough to accomplish the desired result of distinguishing between normal and pneumonia on X-rays.
+# c) There may be an imbalance in the number of samples in the normal X-rays and in the pneumonia X-rays. This means the model will struggle greatly to train properly from the lesser clain.
 
 **5**
 
-#My suggestion 
+# My suggestions to solve this problem would be to:
+
+# a) Increase the amount of diversity of images in the training dataset.
+
+# b) Revise the complexity of the model by reducing the number of laters to the architecture, reducing the number of chanels, and using pretrained models.
+
+# c) Adjusting the weighting of the image samples to balance the dataset, so the model can properly train the lesser weighted image samples.
 
 
 ###Data augmentation
