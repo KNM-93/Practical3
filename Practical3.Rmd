@@ -562,11 +562,265 @@ batch[[1]]$size()
 
 # This could be helfpul for us to use firstly because it has been extensively trained and has millions of parameters in various models, including convoluted neural networks. ImageNet can also be helpful for us to use to compare the performance of our models, because the models it has trained are more accurate.
 
-
 **8**
+
+# Using MobileNet in this practical could help us improve results in a number of ways.
+
+# a) MobileNet's architecture has the the ability to balance accuracy and model size. It can adjust the width multiplier and resolution multiplier, and this would allow the model size to better match our desired accuracy level.
+
+# b) MobileNet's architecture has an advanced feature extraction mechanism. This would be especially important for us, as we are aiming to distinguish X-rays.
 
 **9**
 
+# The parameters in MobileNet depend on the specific variant and configuration used. The number of paramaters can be calculated using the Java code: 
+
+# {Total Parameters = Depthwise Convolution Parameters + Pointwise Convolution Parameters + Fully Connected Layer Parameters}
 
 
+
+```{r MobileNet model}
+
+# Load the pre-trained MobileNet model
+mobilenet <- model_mobilenet_v2(pretrained = TRUE)
+
+# Modify the last fully connected layer to match your classification task
+
+#in_features <- mobilenet$classifier$in_features
+
+mobilenet$classifier <- nn_linear(224*224*3, 2)   
+
+
+# Adjust the output size based on your classification task
+```
+
+
+**10**
+
+###Training a different architecture using AlexNet
+
+##Pre-processing
+
+```{r}
+process_images <- function(shuffled_dataset) {
+  
+img_size <- 224  # Desired image size
+  
+# Initializing an empty list to store processed images
+X <- list()
+  
+# Looping through each image path in shuffled_train_dataset
+for (image_path in shuffled_dataset) {
+
+# Reading the image
+img <- imager::load.image(image_path)
+    
+# Normalizing the image
+img_normalized <- img/255
+    
+# Resizing the image
+img_resized <- resize(img_normalized, img_size, img_size)
+    
+# Appending the processed image to the list
+    X <- c(X, list(img_resized))
+  }
+  
+  return(X)
+}
+```
+
+```{r}
+train_X <- process_images(shuffled_train_dataset)
+test_X <- process_images(shuffled_test_dataset)
+val_X <- process_images(shuffled_val_dataset)
+
+train_y <- ifelse(shuffled_train_labels == "normal", 1, 2)
+test_y <- ifelse(shuffled_test_labels == "normal", 1, 2)
+val_y <- ifelse(shuffled_val_labels == "normal", 1, 2)
+
+train_y <- as.integer(train_y)
+test_y <- as.integer(test_y)
+val_y <- as.integer(val_y)
+```
+
+
+##Reshaping data
+
+```{r reshaping}
+train_X <- array(data = unlist(train_X), dim = c(1000, 224, 224, 1))
+test_X <- array(data = unlist(test_X), dim = c(200, 224, 224, 1))
+val_X <- array(data = unlist(val_X), dim = c(16, 224, 224, 1))
+```
+
+```{r}
+print(dim(train_X))
+print(length(train_y))
+print(dim(test_X))
+print(length(test_y))
+print(dim(val_X))
+print(length(val_y))
+```
+```{r}
+train_X <- aperm(train_X, c(1,4,2,3))
+test_X <- aperm(test_X, c(1,4,2,3))
+val_X <- aperm(val_X,c(1,4,2,3))
+
+dim(train_X)
+```
+
+
+```{r}
+library(torch)
+library(torchvision)
+library(luz)
+```
+
+```{r}
+data_folder <- "Data/lab3_chest_xray"
+train_folder <- file.path(data_folder, "train")
+valid_folder <- file.path(data_folder, "valid")
+test_folder <- file.path(data_folder, "test")
+```
+
+```{r}
+# Define a custom dataset class
+ImageDataset <- dataset(
+  name = "ImageDataset",
+  initialize = function(X, y) {
+    # Store the data as tensors
+    self$data <- torch_tensor(X)
+    self$labels <- torch_tensor(y)
+  },
+  .getitem = function(i) {
+    # Return a single sample and label
+    x <- self$data[i,,,]
+    y <- self$labels[i]
+    list(x = x, y = y)
+  },
+  .length = function() {
+    # Return the number of samples
+    dim(self$data)[1]
+  }
+)
+
+# Create a dataset object from your data
+train_dataset <- ImageDataset(train_X, train_y)
+test_dataset <- ImageDataset(test_X, test_y)
+val_dataset <- ImageDataset(val_X, val_y)
+
+# Create a dataloader object from your dataset
+train_dataloader <- dataloader(train_dataset, batch_size = 16)
+test_dataloader <- dataloader(test_dataset, batch_size = 16)
+val_dataloader <- dataloader(val_dataset, batch_size = 16)
+
+# Iterate over batches of data
+batch = train_dataloader$.iter()$.next()
+
+# Visualize the first batch size
+batch[[1]]$size()
+```
+
+```{r}
+
+# Defining the AlexNet model
+net <- nn_module(
+  "AlexNet",
+
+  initialize = function() {
+    self$conv1 <- nn_conv2d(1, 32, 3, 1)
+    self$conv2 <- nn_conv2d(32, 64, 3, 1)
+    self$dropout1 <- nn_dropout(0.25)
+    self$dropout2 <- nn_dropout(0.5)
+    self$fc1 <- nn_linear(774400, 128)  # Adjust the input size based on your image dimensions
+    self$fc2 <- nn_linear(128, 2)             # Change the output size to match your classification task
+  },
+  
+  forward = function(x) {
+    x %>%                                        # N * 1 * 224 * 224
+      self$conv1() %>%                           # N * 32 * 222 * 222
+      nnf_relu() %>% 
+      self$conv2() %>%                           # N * 64 * 220 * 220
+      nnf_relu() %>% 
+      nnf_max_pool2d(2) %>%                      # N * 64 * 110 * 110
+      self$dropout1() %>% 
+      torch_flatten(start_dim = 2) %>%           # N * 64 * 110 * 110 --> N * 774400
+      self$fc1() %>%                             # N * 128
+      nnf_relu() %>% 
+      self$dropout2() %>% 
+      self$fc2()                                 # N * 2 (change the output size to match your classification task)
+  }
+)
+
+```
+
+
+```{r}
+# Setting the number of epochs
+num_epochs <- 3
+
+train_loss <- numeric(num_epochs)
+train_acc <- numeric(num_epochs)
+test_loss <- numeric(num_epochs)
+test_acc <- numeric(num_epochs)
+
+# Looping through the epochs
+for (epoch in 1:num_epochs) {
+
+# Performing training and validation for each epoch
+  fitted <- net %>%
+    setup(
+      loss = nn_cross_entropy_loss(),
+      optimizer = optim_adam,
+      metrics = list(
+        luz_metric_accuracy()
+      )
+    ) %>%
+    fit(train_dataloader, epochs = 1, valid_data = test_dataloader)
+  
+# Printing the metrics for the current epoch
+  cat("Epoch ", epoch, "/", num_epochs, "\n")
+  cat("Train metrics: Loss: ", fitted$records$metrics$train[[1]]$loss, " - Acc: ", fitted$records$metrics$train[[1]]$acc, "\n")
+  cat("Valid metrics: Loss: ", fitted$records$metrics$valid[[1]]$loss, " - Acc: ", fitted$records$metrics$valid[[1]]$acc, "\n")
+  cat("\n")
+  
+# Storing the loss and accuracy values
+  train_loss[epoch] <- fitted$records$metrics$train[[1]]$loss
+  train_acc[epoch] <- fitted$records$metrics$train[[1]]$acc
+  test_loss[epoch] <- fitted$records$metrics$train[[1]]$loss
+  test_acc[epoch] <- fitted$records$metrics$valid[[1]]$acc
+}
+```
+
+##Plotting learning curves
+
+```{r}
+# Plotting the train and test loss
+loss_df <- data.frame(
+  Epoch = 1:num_epochs,
+  Train_Loss = train_loss,
+  Test_Loss = test_loss
+)
+loss_plot <- ggplot(data = loss_df) +
+  geom_line(aes(x = Epoch, y = Train_Loss, color = "Train Loss")) +
+  geom_line(aes(x = Epoch, y = Test_Loss, color = "Test Loss")) +
+  labs(x = "Epoch", y = "Loss") +
+  scale_color_manual(values = c("Train Loss" = "blue", "Test Loss" = "red")) +
+  theme_minimal()
+
+# Plotting the train and test accuracy
+acc_df <- data.frame(
+  Epoch = 1:num_epochs,
+  Train_Accuracy = train_acc,
+  Test_Accuracy = test_acc
+)
+acc_plot <- ggplot(data = acc_df) +
+  geom_line(aes(x = Epoch, y = Train_Accuracy, color = "Train Accuracy")) +
+  geom_line(aes(x = Epoch, y = Test_Accuracy, color = "Test Accuracy")) +
+  labs(x = "Epoch", y = "Accuracy") +
+  scale_color_manual(values = c("Train Accuracy" = "blue", "Test Accuracy" = "red")) +
+  theme_minimal()
+
+# Printing the plots
+print(loss_plot)
+print(acc_plot)
+```
 
