@@ -448,3 +448,83 @@ print(acc_plot)
 ```
 
 **4**
+
+#Based on the training and test accuracy
+
+**5**
+
+#My suggestion 
+
+
+###Data augmentation
+
+```{r data augmentation}
+img <- readImage(shuffled_train_dataset[5])
+
+T_img <- torch_squeeze(torch_tensor(img)) %>% 
+  
+# Randomly change the brightness, contrast and saturation of an image
+        transform_color_jitter() %>%
+  
+# Horizontally flip an image randomly with a given probability
+        transform_random_horizontal_flip() %>%
+  
+# Vertically flip an image randomly with a given probability
+        transform_random_vertical_flip(p = 0.5)
+
+image(as.array(T_img))
+```
+
+```{r adding data transformations to dataloader}
+
+# Define a custom dataset class with transformations
+ImageDataset_augment <- dataset(
+  name = "ImageDataset",
+  initialize = function(X, y, transform = NULL) {
+    self$transform <- transform
+    self$data <- X
+    self$labels <- y
+  },
+  .getitem = function(i) {
+    
+# Return a single sample and label
+    x <- self$data[i,,,]
+    x <- self$transform(x)
+    y <- self$labels[i]
+    
+    list(x = x, y = y)
+  },
+  .length = function() {
+    dim(self$data)[1]
+  }
+)
+
+# Define the transformations for training data
+train_transforms <- function(img) {
+  img <- torch_squeeze(torch_tensor(img)) %>%
+    transform_color_jitter() %>%
+    transform_random_horizontal_flip() %>%
+    transform_random_vertical_flip(p = 0.5) %>%
+    torch_unsqueeze(dim = 1)
+  
+  return(img)
+}
+
+# Apply the transformations to your training dataset
+train_dataset <- ImageDataset_augment(train_X, train_y, transform = train_transforms)
+test_dataset <- ImageDataset(test_X, test_y)
+val_dataset <- ImageDataset(val_X, val_y)
+
+# Create a dataloader for training
+train_dataloader <- dataloader(train_dataset, batch_size = 16)
+test_dataloader <- dataloader(test_dataset, batch_size = 16)
+val_dataloader <- dataloader(val_dataset, batch_size = 16)
+
+# Iterate over batches of data
+batch = train_dataloader$.iter()$.next()
+
+# Visualize the first batch size
+batch[[1]]$size()
+```
+
+**6**
