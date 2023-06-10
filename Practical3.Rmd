@@ -824,3 +824,6 @@ print(loss_plot)
 print(acc_plot)
 ```
 
+**Conclusions**
+
+# My AlexNet model does not perform better than the previous CNN model. With an accuracy of 0.5, this model is not accurately learning the patterns in the data. This could be due to an insufficient number of epochs. Alternatively, the AlexNet architecture may not be well suited for this kind of image classification model.
