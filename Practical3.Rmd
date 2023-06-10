@@ -250,3 +250,164 @@ fig <- ggplot(df, aes(x = Value)) +
 grid.arrange(fig, nrow = 1)
 ```
 
+**3**
+# If the dataset was not balanced
+
+
+###Training
+
+```{r reshaping dataset}
+train_X <- array(data = unlist(train_X), dim = c(1000, 224, 224, 1))
+test_X <- array(data = unlist(test_X), dim = c(200, 224, 224, 1))
+val_X <- array(data = unlist(val_X), dim = c(16, 224, 224, 1))
+```
+
+```{r}
+print(dim(train_X))
+print(length(train_y))
+print(dim(test_X))
+print(length(test_y))
+print(dim(val_X))
+print(length(val_y))
+```
+```{r aperm}
+train_X <- aperm(train_X, c(1,4,2,3))
+test_X <- aperm(test_X, c(1,4,2,3))
+val_X <- aperm(val_X,c(1,4,2,3))
+
+dim(train_X)
+```
+
+```{r}
+library(torch)
+library(torchvision)
+library(luz)
+```
+
+```{r custom dataset}
+
+# Defining a custom dataset class
+ImageDataset <- dataset(
+  name = "ImageDataset",
+  initialize = function(X, y) {
+    
+# Storing the data as tensors
+    self$data <- torch_tensor(X)
+    self$labels <- torch_tensor(y)
+  },
+  .getitem = function(i) {
+    
+# Returning a single sample and label
+    x <- self$data[i,,,]
+    y <- self$labels[i]
+    list(x = x, y = y)
+  },
+  .length = function() {
+    
+# Returning the number of samples
+    dim(self$data)[1]
+  }
+)
+
+# Creating a dataset object from data
+train_dataset <- ImageDataset(train_X, train_y)
+test_dataset <- ImageDataset(test_X, test_y)
+val_dataset <- ImageDataset(val_X, val_y)
+
+# Creating a dataloader object from dataset
+train_dataloader <- dataloader(train_dataset, batch_size = 16)
+test_dataloader <- dataloader(test_dataset, batch_size = 16)
+val_dataloader <- dataloader(val_dataset, batch_size = 16)
+
+# Iterating over batches of data
+batch = train_dataloader$.iter()$.next()
+
+# Visualizing the first batch size
+batch[[1]]$size()
+```
+
+###Creating a CNN Model
+
+```{r CNN Model}
+net <- nn_module(
+  "Net",
+  
+  initialize = function() {
+    self$conv1 <- nn_conv2d(1, 32, 3, 1)
+    self$conv2 <- nn_conv2d(32, 64, 3, 1)
+    self$dropout1 <- nn_dropout2d(0.25)
+    self$dropout2 <- nn_dropout2d(0.5)
+    self$fc1 <- nn_linear(774400, 128)  # Adjusting input size based on your image dimensions
+    
+    self$fc2 <- nn_linear(128, 2)             # Changing the output size to match classification task
+  },
+  
+  forward = function(x) {
+    x %>%                                        # N * 1 * 224 * 224
+      self$conv1() %>%                           # N * 32 * 222 * 222
+      nnf_relu() %>% 
+      self$conv2() %>%                           # N * 64 * 220 * 220
+      nnf_relu() %>% 
+      nnf_max_pool2d(2) %>%                      # N * 64 * 110 * 110
+      self$dropout1() %>% 
+      torch_flatten(start_dim = 2) %>%           # N * 64 * 110 * 110 --> N * 774400
+      self$fc1() %>%                             # N * 128
+      nnf_relu() %>% 
+      self$dropout2() %>% 
+      self$fc2()                                 # N * 2 (change the output size to match your classification task)
+  }
+)
+```
+
+##Training Model
+
+```{r}
+library(abind)
+library(EBImage)
+library(imager)
+```
+
+```{r}
+library(torch)
+library(torchvision)
+library(luz)
+```
+
+```{r warning=FALSE}
+# Setting the number of epochs
+
+num_epochs <- 3
+
+train_loss <- numeric(num_epochs)
+train_acc <- numeric(num_epochs)
+test_loss <- numeric(num_epochs)
+test_acc <- numeric(num_epochs)
+
+# Looping through the epochs
+for (epoch in 0:num_epochs) {
+  
+# Performing training and validation for each epoch
+  fitted <- net %>%
+    setup(
+      loss = nn_cross_entropy_loss(),
+      optimizer = optim_adam,
+      metrics = list(
+        luz_metric_accuracy()
+      )
+    ) %>%
+    fit(train_dataloader, epochs = 1, valid_data = test_dataloader)
+  
+# Printing the metrics for the current epoch
+  cat("Epoch ", epoch, "/", num_epochs, "\n")
+  cat("Train metrics: Loss: ", fitted$records$metrics$train[[1]]$loss, " - Acc: ", fitted$records$metrics$train[[1]]$acc, "\n")
+  cat("Valid metrics: Loss: ", fitted$records$metrics$valid[[1]]$loss, " - Acc: ", fitted$records$metrics$valid[[1]]$acc, "\n")
+  cat("\n")
+  
+# Storing the loss and accuracy values
+  train_loss[epoch] <- fitted$records$metrics$train[[1]]$loss
+  train_acc[epoch] <- fitted$records$metrics$train[[1]]$acc
+  test_loss[epoch] <- fitted$records$metrics$train[[1]]$loss
+  test_acc[epoch] <- fitted$records$metrics$valid[[1]]$acc
+}
+```
+
