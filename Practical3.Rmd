@@ -544,9 +544,24 @@ batch[[1]]$size()
 
 **6**
 
+# Some drawbacks of data augmentation include:
+
+# a) Loss of information. Some data augmentation techniques can cause information to be lost and may remove important features from images. This may make is harder to accurately classify the images.
+
+# b) Since data augmentation applies transformations to a dataset, this may increase the time for the data to be trained and may also require increased processing power, memory, and storage.
+
+#c) There's a potential for bias depending on the augmentation technique chosen. Some techniques may create bias towards specific classes of data, leading to skewed predictions.
+
 ###Mobile net
 
 **7**
+
+# ImageNet is a largely used data set in the field of computer vision. It was used to advance the development of deep learning models for image classification tasks. It consists of a large collection of labelled images.
+
+# It has over 14 million images and thousands of object classes.
+
+# This could be helfpul for us to use firstly because it has been extensively trained and has millions of parameters in various models, including convoluted neural networks. ImageNet can also be helpful for us to use to compare the performance of our models, because the models it has trained are more accurate.
+
 
 **8**
 
